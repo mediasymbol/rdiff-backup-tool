@@ -1,0 +1,80 @@
+#!/bin/sh
+
+COMPOSE="docker-compose -f docker-compose.yml"
+
+get_state() {
+    state=$($COMPOSE ps | grep -E 'rdiff_backup.+')
+
+    if [ "" = "$state" ]; then
+        echo 0
+    elif echo $state | grep -q 'Up'; then
+        echo 1
+    else
+        echo 2
+    fi
+}
+
+init() {
+    if [ 0 -ne "$(get_state)" ]; then
+        $COMPOSE down
+    fi
+
+    $COMPOSE run --rm rdiff_backup /scripts/init.sh
+}
+
+start() {
+    if [ 0 -ne "$(get_state)" ]; then
+        $COMPOSE down
+    fi
+
+    $COMPOSE up -d
+    $COMPOSE logs
+}
+
+stop() {
+    $COMPOSE down
+}
+
+logs() {
+    $COMPOSE logs "$@"
+}
+
+backup() {
+    if [ 1 -ne "$(get_state)" ]; then
+        printf "\nContainer is not running\n\n"
+        exit 1;
+    fi
+
+    $COMPOSE exec rdiff_backup /scripts/backup.sh
+}
+
+restore() {
+    if [ 1 -ne "$(get_state)" ]; then
+        printf "\nContainer is not running\n\n"
+        exit 1;
+    fi
+
+    $COMPOSE exec rdiff_backup /scripts/restore.sh "$@"
+}
+
+show_help() {
+    printf "\nUsage:
+  rdiff init                    - initialize container
+  rdiff {start|stop}            - start or stop container (must be initialized before)
+  rdiff logs [options]          - show container logs (same as docker-compose logs [options])
+  rdiff backup                  - run backup script (client only)
+  rdiff restore [time] [path]   - run restore script (client only)
+     time - rdiff-backup time string (if not given the list of all increments will be printed)
+     path - path to file or directory (if not given all data will be restored)
+  \n\n"
+
+    exit 1
+}
+
+if echo "$*" | egrep -Eq '^(init|start|stop|logs|backup|restore)'; then
+    FN=$1
+    shift
+    $FN "$@"
+else
+    show_help
+fi

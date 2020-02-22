@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  rdiff_backup:
+    image: mediasymbol/rdiff-backup
+    #restart: always
+    volumes:
+      - ./var/config:/config
+      - ./var/backup:/backup
+      #- ./var/restored:/restored                               # uncomment in push scenario
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      - SERVER_HOST=your-server.tld
+      - SERVER_PORT=22
+      - BACKUP_FREQUENCY=daily                                  # 15min|daily|hourly|monthly|weekly
+      - BACKUP_EXPIRE=1Y                                        # see rdiff-backup time formats
+      #- MAIL_ENABLED=1                                         # uncomment mail settings if you want to send reports after backups
+      #- MAIL_SENDER_ADDRESS=backup@your-mail.tld
+      #- MAIL_SERVER_HOST=your-mail.tld
+      #- MAIL_SERVER_PORT=587
+      #- MAIL_AUTH_USER=backup@your-mail.tld
+      #- MAIL_AUTH_PASS=_backup_mail_user_password_
+      #- MAIL_RECEIVER_ADDRESS=admin@your-mail.tld
+      #- MAIL_TLS=YES
+      #- MAIL_STARTTLS=YES

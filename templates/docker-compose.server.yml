@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  rdiff_backup:
+    image: mediasymbol/rdiff-backup
+    ports:
+      - "22:22"
+    #restart: always
+    volumes:
+      - ./var/config:/config
+      - ./var/backup:/backup
+      #- ./var/restored:/restored       # uncomment in pull scenario
